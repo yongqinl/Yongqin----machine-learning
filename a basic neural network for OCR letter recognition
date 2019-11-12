@@ -1,0 +1,155 @@
+NOTE: This program is about implementing a basic neural network for OCR letter recognition 
+      1.Implement a multi-layer perceptron (MLP) by modifying the MLP program from the class to solve the XOR problem 
+        and train it to translate the handwritten numbers of MNIST into their corresponding ASCII representation. 
+        Plot a training curve and interpret your results.
+
+      2.Investigate how much noise the MLP can tolerate in the pattern before being unable to recognize a letter. 
+
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from keras.datasets import mnist
+import keras
+from sklearn.metrics import accuracy_score
+
+
+# parameters start 
+(x_train, y_train), (x_test, y_test) = mnist.load_data()
+size_train_whole = np.shape(x_train)[0]
+size_test_whole  = np.shape(x_test)[0]
+
+
+# normalization 
+x_train          = np.reshape(x_train, (size_train_whole, 784))/255.0
+x_test           = np.reshape(x_test, (size_test_whole, 784))/255.0
+
+
+
+# adding bias 
+bias_train       = np.ones((size_train_whole, 1))
+bias_test        = np.ones((size_test_whole, 1))
+x_train          = np.concatenate((x_train, bias_train), axis=1)
+x_test           = np.concatenate((x_test, bias_test), axis=1)
+
+
+# number to ascii code 
+import binascii
+y_train_ascii = []
+for i in range(size_train_whole):
+  char_1 = str(y_train[i]).encode('utf-8')
+  conv = bin(int(binascii.hexlify(char_1), 16))[4:]
+  conv = list(map(int, conv))
+
+  y_train_ascii.append(conv)
+  
+y_test_ascii = []
+for i in range(size_test_whole):
+  char_1 = str(y_test[i]).encode('utf-8')
+  conv = bin(int(binascii.hexlify(char_1), 16))[4:]
+  conv = list(map(int, conv))
+
+  y_test_ascii.append(conv)
+
+ 
+y_train, y_test = np.asarray(y_train_ascii), np.asarray(y_test_ascii)
+ 
+
+
+# separate the dataset into 3 datasets
+size_train = 20000
+x_train_1, y_train_1 = x_train[:size_train], y_train[:size_train]  
+x_train_2, y_train_2 = x_train[size_train:size_train*2], y_train[size_train:size_train*2]  
+x_train_3, y_train_3 = x_train[size_train*2:], y_train[size_train*2:]  
+
+
+# model specifications
+Ni=785; Nh=32; No=4;
+learning_rate = 0.1
+Ntrials = 200
+
+
+#parameter and array initialization
+wh=np.random.randn(Nh,Ni); dwh=np.zeros(wh.shape) 
+wo=np.random.randn(No,Nh); dwo=np.zeros(wo.shape) 
+error=np.array([])
+
+
+# training start 
+
+for trial in range(Ntrials):     
+
+  if (trial %2) == 0:
+    x_train, y_train = x_train_1, y_train_1
+  elif (trial %3) == 0:
+    x_train, y_train = x_train_2, y_train_2
+  else:
+    x_train, y_train = x_train_3, y_train_3    
+    
+  h=1/(1+np.exp(-wh@x_train.T))        #hidden activation for all pattern
+  y=1/(1+np.exp(-wo@h))                #output for all pattern
+
+  do=y*(1-y)*(y_train.T-y)/size_train  # delta output
+  dh=h*(1-h)*(wo.transpose()@do)       # delta backpropagated  
+
+
+  # update weights with momentum
+  dwo=0.9*dwo+do@h.T
+  wo=wo+learning_rate*dwo
+  dwh=0.9*dwh+dh@x_train
+  wh=wh+learning_rate*dwh
+
+  error=np.append(error,np.mean((y_train.T-y)**2))
+  
+  if trial % 100 == 0:
+    print('iteration: ' + str(trial)  +' error: '  + str(np.mean((y_train.T-y)**2)))
+
+
+# test
+h=1/(1+np.exp(-wh@x_test.T)) #hidden activation for all pattern
+y=1/(1+np.exp(-wo@h))        #output for all pattern
+y = np.around(y).T
+
+
+accuracy   = (y_test == y).astype(np.int)
+mean_arry  = np.asarray(accuracy).mean()
+print('Accuracy on testing: ' + str(mean_arry))
+
+ 
+
+# plot results
+
+from IPython.display import set_matplotlib_formats
+set_matplotlib_formats('pdf', 'png')
+
+plt.xlabel("Iteration")
+plt.ylabel("mean square error")
+plt.plot(error)
+plt.show()
+
+
+# noisy pattern
+acc = []
+probs = np.linspace(0,1,10)
+N = 10
+X_bin = 2*x_test.copy()-1 # rescale features to -1 to +1
+for p in probs:
+  mean_arry = 0
+  for i in range(N):
+    X_mask = 2*np.random.binomial(1, (1-p), size=x_test.shape) - 1
+    
+    X_noisy = (X_bin*X_mask + 1)/2 #rescale to 0, 1
+    h=1/(1+np.exp(-wh@X_noisy.T))  #hidden activation for all pattern
+    y=1/(1+np.exp(-wo@h))          #output for all pattern
+    y = np.around(y).T
+ 
+    accuracy    = (y_test == y).astype(np.int)
+    mean_arry  += accuracy.mean()/N
+ 
+  acc.append(mean_arry)
+
+plt.plot(acc)
+plt.title('Accuracy with Noize')
+plt.ylabel('Accuracy')
+plt.xlabel('Noise percentage (x10)')
+plt.show()
