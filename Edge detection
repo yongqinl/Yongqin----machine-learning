@@ -1,0 +1,48 @@
+import numpy as np
+from matplotlib import pyplot as plt
+import cv2
+
+# Translate the colorful photo into gray one to cut dimensions from 3 to 2
+img = cv2.imread('Yongqin Lei.jpg',0)
+
+# The initial size of image is 960x720
+img.shape
+
+# Set up filters matrices
+y_filter = np.array([[-1,-2,-1],[0,0,0],[1,2,1]])
+x_filter = np.array([[-1,0,1],[-2,0,2],[-1,0,1]])
+Gaussian_filter = (np.array([[1,2,1],[2,4,2],[1,2,1]]))/16
+
+# After applying a 3x3 filter, the size of filtered image becomes 958x718
+y_filtered = np.zeros((958,718))
+x_filtered = np.zeros((958,718))
+Gaussian_filtered = np.zeros((958,718))
+
+# Do convolutions to filter img
+for i in range (958):
+    for j in range (718):
+        y_filtered[i][j] = img[i][j]*y_filter[2,2]  + img[i][j+1]*y_filter[2,1] + img[i][j+2]*y_filter[2][0]+ img[i+2][j]*y_filter[0][2] + img[i+2][j+1]*y_filter[0][1] + img[i+2][j+2]*y_filter[0][0] 
+        x_filtered[i][j] = img[i][j]*x_filter[2,2]  + img[i][j+1]*x_filter[2,1] + img[i][j+2]*x_filter[2][0]+ img[i+1][j]*x_filter[1][2] + img[i+1][j+1]*x_filter[1][1] + img[i+1][j+2]*x_filter[1][0] + img[i+2][j]*x_filter[0][2] + img[i+2][j+1]*x_filter[0][1] + img[i+2][j+2]*x_filter[0][0] 
+        Gaussian_filtered[i][j] = img[i][j]*Gaussian_filter[2][2]  + img[i][j+1]*Gaussian_filter[2][1] + img[i][j+2]*Gaussian_filter[2][0]+ img[i+1][j]*Gaussian_filter[1][2] + img[i+1][j+1]*Gaussian_filter[1][1] + img[i+1][j+2]*Gaussian_filter[1][0] + img[i+2][j]*Gaussian_filter[0][2] + img[i+2][j+1]*Gaussian_filter[0][1] + img[i+2][j+2]*Gaussian_filter[0][0] 
+
+
+
+f = plt.figure(figsize = (20,20))
+
+# Plot original photo and filtered photos
+img1 = plt.imread('Yongqin Lei.jpg')
+original = f.add_subplot(2,2,1)
+original.imshow(img1, cmap = 'gray')
+original.set_xlabel('Original photo', fontsize = 20)
+
+Gaussian = f.add_subplot(2,2,2)
+Gaussian.imshow(Gaussian_filtered, cmap = 'gray')
+Gaussian.set_xlabel('Gaussian filtered', fontsize = 20)
+
+vertical = f.add_subplot(2,2,3)
+vertical.imshow(y_filtered, cmap = 'gray')
+vertical.set_xlabel('Vertical edge filterd', fontsize = 20)
+
+horizontal = f.add_subplot(2,2,4)
+horizontal.imshow(x_filtered, cmap = 'gray')
+horizontal.set_xlabel('Horizontal edge filterd', fontsize = 20)
