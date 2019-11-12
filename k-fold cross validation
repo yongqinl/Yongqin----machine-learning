@@ -1,0 +1,47 @@
+#Write a script that does a k-fold cross-validation without using the cross_val_score function or 
+#another cross-validation library function and compare the results with the sklearn function.   
+
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn import metrics, model_selection 
+from sklearn import svm
+
+iris_data = np.loadtxt('iris.data',delimiter=',')
+model = svm.SVC(kernel='linear')
+total_accuracy = 0
+total_std = 0
+for k in range (0,150):
+    test = iris_data[(0+k):(1+k),:] 
+    train_first = iris_data[(1+k):,:]
+    train_sec = iris_data[0:(k),:]
+    train = np.append(train_first, train_sec)
+    tr = train.reshape(149,5)
+    
+    x_train_myscript = tr[:,0:4]
+    y_train_myscript = np.int32(tr[:,4])
+    x_test_myscript = test[:,0:4]
+    y_test_myscript = np.int32(test[:,4])
+    
+# train
+    model.fit(x_train_myscript,y_train_myscript)
+# prediction
+    y_predicted_myscript=model.predict(x_test_myscript)
+#evaluation
+    total_accuracy += np.mean(y_test_myscript == y_predicted_myscript) 
+    total_std += (np.mean(y_test_myscript == y_predicted_myscript)-0.98)**2
+
+
+
+x = iris_data[:,0:4]
+y = iris_data[:,4]
+CV=10  
+scores_SVM = model_selection.cross_val_score(svm.SVC(kernel='linear'), x, y, cv=CV)
+# Because we used LOOCV, which means that every data was used to its full potential, 
+# we were able to get a better accuracy than the sklearn function
+
+print("My script: accuracy on iris data: %0.4f (+/- %0.4f)" % (total_accuracy/150, np.sqrt((total_std/150))))
+print("Sklearn function: accuracy on iris data: %0.4f (+/- %0.4f)" % (scores_SVM.mean(), scores_SVM.std()))
+
+
+# My script: accuracy on iris data: 0.9800 (+/- 0.1400)
+# Sklearn function: accuracy on iris data: 0.9733 (+/- 0.0442)
