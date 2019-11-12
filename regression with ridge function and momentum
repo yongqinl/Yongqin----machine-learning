@@ -1,0 +1,111 @@
+Introduction:	
+Write a function to implement Linear Regression with ridge function and momentum
+without using public libraries related to regression. The inputs of this function should be predictor values (X or X_1), 
+a target value (Y), a learning rate (lr), and the number of iterations (repetition), penalty alpha for ridge regression
+, and momenturm. The function must build a linear model using gradient descent and output the model (params) 
+and loss values per iteration (loss). Set the iteration to 10000 and calculate and show the mean squared error (MSE) 
+for the models obtained from both X and X_1 predictors and plot the learning curve (loss) for both models in one figure.   
+
+
+
+def linear_regression_ridge_momentum(predictor,kpredictor,price,lr,ite,pa,m):
+    # m is momentum
+    # pa is the penalty alpha for ridge regression
+    # k in front of variables indicates that the variables are for model x1
+    v = np.array([0])
+    # normalize x matrix
+    for i in range (15):
+        predictor[:,i]=(predictor[:,i]-min(predictor[:,i]))/(max(predictor[:,i])-min(predictor[:,i]))
+    price=(price-min(price))/(max(price)-min(price))
+
+    kpredictor=(kpredictor-min(kpredictor))/(max(kpredictor)-min(kpredictor))
+    kprice=(price-min(price))/(max(price)-min(price))
+
+    kw1=np.array([-1]); kw2=np.array([-1]); kL=np.array([])
+
+    kmse = np.array([]); mse=np.array([])
+    
+    # set up a matrix of 15 parameters for model x
+    w1=np.ones((1,15))
+    w1=-w1
+    w2=np.array([-1]); L=np.array([])
+    
+    tem= np.array([])
+
+    for iter in range(ite):
+        # linear regression for model x
+        y = np.sum(w1[-1]*predictor,axis=1)+w2[-1]
+        for i in range(15):
+            # included the derivative of ridge element and momentum in updating w parameters
+            # no momentum when w has not been updated once
+            if w1.shape==(1,15):
+                tem = np.append(tem,w1[-1,i]-lr*sum((y-price)*predictor[:,i])-2*pa*w1[-1,i])
+            else:
+                tem = np.append(tem,w1[-1,i]-0.9*lr*sum((y-price)*predictor[:,i])-2*pa*w1[-1,i]+0.1*m*(-lr*sum((y-price)*predictor[:,i])-2*pa*w1[-2,i]))
+
+        w1=np.append(w1,[tem],axis=0)
+        
+        tem = np.array([])
+        # included the derivative of ridge element and momentum in updating w parameters
+        # no momentum when w has not been updated once
+        if w2.shape==(1,):
+            w2=np.append(w2,w2[-1]-lr*sum(y-price)-2*pa*w2[-1])
+        else:
+            w2=np.append(w2,w2[-1]-0.9*lr*sum(y-price)-2*pa*w2[-1]+0.1*m*(-lr*sum(y-price)-2*pa*w2[-2]))
+
+        # included an ridge function element in calculating the loss function
+        L=np.append(L,sum((y-price)**2)+pa*(np.sum(w1*w1)+np.sum(w2*w2)))
+        
+        # linear regression for model x1
+        ky = kw1[-1]*kpredictor+kw2[-1]
+        # included the derivative of ridge element and momenturm in updating w parameters
+        # no momentum when w has not been updated once
+        if kw1.shape==(1,):
+            kw1=np.append(kw1,kw1[-1]-lr*sum((ky-price)*kpredictor)-2*pa*kw1[-1])
+
+        else: 
+            kw1=np.append(kw1,kw1[-1]-0.9*lr*sum((ky-price)*kpredictor)-2*pa*kw1[-1]+0.1*m*(-lr*sum((y-price)*kpredictor)-2*pa*kw1[-2]))
+
+        # included the derivative of ridge element and momentum in updating w parameters
+        # no momentum when w has not been updated once
+        if kw2.shape==(1,):
+            kw2=np.append(kw2,kw2[-1]-lr*sum(ky-price)-2*pa*kw2[-1])
+
+        else:
+            kw2=np.append(kw2,kw2[-1]-0.9*lr*sum(ky-price)-2*pa*kw2[-1]+0.1*m*(-lr*sum(y-price)-2*pa*kw2[-2]))
+
+        # included an ridge function element in calculating the loss function
+        kL=np.append(kL,sum((ky-price)**2)+pa*(np.sum(kw1*kw1)+np.sum(kw2*kw2)))
+        
+    # mean squared errors; we compute MSE by deviding L by N, as what we did in class
+    mse = L/21613
+    kmse = kL/21613
+    
+    # output parameters for both models
+    print("parameters for full model x are ",w1[-1], w2[-1])
+    print("")
+    print("parameters for reduced model x1 are ",kw1[-1], kw2[-1])
+    
+    
+    
+    # loss values per iteration
+    plt.loglog(L)
+    plt.loglog(kL)
+    plt.xlabel('Iterations'); plt.ylabel('Loss')
+    plt.legend(['x', 'x1'], loc='lower right')
+    plt.show()
+    
+    # show MSE
+    plt.loglog(mse)
+    plt.loglog(kmse)
+    plt.xlabel('Iterations'); plt.ylabel('MSE')
+    plt.legend(['x', 'x1'], loc='lower right')
+    plt.show()
+
+linear_regression_ridge_momentum(x,x1,price,0.00003,10000,0.001,0.9)
+
+# parameters for full model x are  [-0.01319635  0.04500622  0.07342835 -0.00236554  0.01657819  0.05219855
+  0.03499422  0.00594424  0.10776248  0.08002977  0.05042618  0.03964575
+  0.00964964  0.05352136 -0.00832503] -0.0743548408204375
+
+# parameters for reduced model x1 are  0.2790232759915154 0.023190924931252053
