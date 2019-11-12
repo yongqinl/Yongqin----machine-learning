@@ -1,0 +1,101 @@
+Instruction: Convert the labels of these data set to a one hot representation and implement a neural network 
+             Estimate and state the best classification performance for this classification problem. 
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from keras.datasets import mnist
+import keras
+from sklearn.metrics import accuracy_score
+from keras import models, layers, optimizers, datasets, utils
+
+X = np.loadtxt("FeaturesX.csv")
+Y = np.loadtxt("LabelsY.csv")
+X = X.T
+y_1_hot = np.zeros((800,10))
+
+# convert labels to one hot representations
+for i in range(0,800):
+    if Y[i]==1:
+        y_1_hot[i]=[1, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+    if Y[i]==2:
+        y_1_hot[i]=[0, 1, 0, 0, 0, 0, 0, 0, 0, 0]
+    if Y[i]==3:
+        y_1_hot[i]=[0, 0, 1, 0, 0, 0, 0, 0, 0, 0]
+
+# normalize X matrix
+for i in range (7):
+    X[:,i]=(X[:,i]-min(X[:,i]))/(max(X[:,i])-min(X[:,i]))
+
+# dividing the sample into trainning set and testing set
+x_train = X[:700,:]
+x_test = X[700:,:]
+
+y_train = y_1_hot[:700,:]
+y_test = y_1_hot[700:,:]
+
+
+
+# adding bias 
+size_train_whole = np.shape(x_train)[0]
+size_test_whole  = np.shape(x_test)[0]
+bias_train       = np.ones((size_train_whole, 1))
+bias_test        = np.ones((size_test_whole, 1))
+x_train          = np.concatenate((x_train, bias_train), axis=1)
+x_test           = np.concatenate((x_test, bias_test), axis=1)
+
+
+
+# model specifications
+Ni=8; Nh=32; No=10;
+learning_rate = 0.0001
+Ntrials = 300
+
+#parameter and array initialization
+wh=np.random.randn(Nh,Ni); dwh=np.zeros(wh.shape) 
+wo=np.random.randn(No,Nh); dwo=np.zeros(wo.shape) 
+error=np.array([])
+
+for trial in range(Ntrials):     
+    h=1/(1+np.exp(-wh@x_train.T))        #hidden activation for all pattern
+    y=1/(1+np.exp(-wo@h))                #output for all pattern
+
+    do=y*(1-y)*(y_train.T-y)             # delta output
+    dh=h*(1-h)*(wo.transpose()@do)       # delta backpropagated  
+
+
+    # update weights with momentum
+    dwo=0.9*dwo+do@h.T
+    wo=wo+learning_rate*dwo
+    dwh=0.9*dwh+dh@x_train
+    wh=wh+learning_rate*dwh
+
+    error=np.append(error,np.mean((y_train.T-y)**2))
+    
+    if trial % 100 == 0:
+        print('iteration: ' + str(trial)  +' error: '  + str(np.mean((y_train.T-y)**2)))
+    
+# test
+h=1/(1+np.exp(-wh@x_test.T)) #hidden activation for all pattern
+y=1/(1+np.exp(-wo@h))        #output for all pattern
+y = np.around(y).T
+
+
+accuracy   = (y_test == y).astype(np.int)
+mean_arry  = np.asarray(accuracy).mean()
+print('Accuracy on testing: ' + str(mean_arry))
+
+from IPython.display import set_matplotlib_formats
+set_matplotlib_formats('pdf', 'png')
+
+plt.xlabel("Iteration")
+plt.ylabel("mean square error")
+plt.plot(error)
+plt.show()
+
+# results shown below
+iteration: 
+0 error: 0.4288016041231072
+iteration: 100 error: 0.04217782714935059
+iteration: 200 error: 0.032514683361639034
+Accuracy on testing: 0.973
