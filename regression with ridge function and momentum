@@ -8,6 +8,24 @@ for the models obtained from both X and X_1 predictors and plot the learning cur
 
 
 
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+
+df = pd.read_csv('houses1.csv')
+
+# split the dataset into price and feature matrix X
+price = df['price (grands)'].values
+
+# matrix of all features
+x = df.iloc[:,1:].values
+
+# sqft_living feature
+x1 = df['sqft_living'].values
+
+# show various statistic summary
+df.describe(include = 'all')
+
 def linear_regression_ridge_momentum(predictor,kpredictor,price,lr,ite,pa,m):
     # m is momentum
     # pa is the penalty alpha for ridge regression
