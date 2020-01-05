@@ -1,4 +1,9 @@
+NOTE: This program is about implementing a basic neural network for OCR letter recognition 
+      1.Implement a multi-layer perceptron to solve the XOR problem 
+        and train it to translate the handwritten numbers of MNIST into their corresponding ASCII representation. 
+        Plot a training curve and interpret your results.
 
+      2.Investigate how much noise the MLP can tolerate in the pattern before being unable to recognize a letter. 
 
 import numpy as np
 import matplotlib.pyplot as plt
