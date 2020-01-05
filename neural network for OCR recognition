@@ -1,5 +1,5 @@
 NOTE: This program is about implementing a basic neural network for OCR letter recognition 
-      1.Implement a multi-layer perceptron (MLP) by modifying the MLP program from the class to solve the XOR problem 
+      1.Implement a multi-layer perceptron to solve the XOR problem 
         and train it to translate the handwritten numbers of MNIST into their corresponding ASCII representation. 
         Plot a training curve and interpret your results.
 
