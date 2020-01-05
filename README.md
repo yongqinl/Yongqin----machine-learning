@@ -1,4 +1,4 @@
-Update: The status of the paper under review at IJPE changed to Revise and Resubmit on 3rd Jan 2020.
+Update: the status of the paper that was under review at IJPE changed to Revise and Resubmit on 3rd Jan 2020.
 -----------------------------------------------------------------------------------------------------
 
 # machine-learning
